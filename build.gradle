@@ -20,10 +20,10 @@ tasks.withType(JavaCompile) {
 repositories {
 //    mavenCentral()
     maven {
-        url System.env.CODEARTIFACT_REPOSITORY_URL
+        url System.env.REPOSITORY_URL
         credentials {
-            username "aws"
-            password System.env.CODEARTIFACT_AUTH_TOKEN
+            username System.env.REPOSITORY_USERNAME
+            password System.env.REPOSITORY_AUTH_TOKEN
         }
     }
 }

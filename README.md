@@ -8,6 +8,14 @@
 
 ## How to use
 
+``` shell
+./gradlew clean
+
+./gradlew build
+```
+
+결과물은 `build/libs/simple-swing-app-0.0.1-SNAPSHOT.jar`에 있습니다.
+
 ## License
 
 MIT License
