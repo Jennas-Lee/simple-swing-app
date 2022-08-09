@@ -3,17 +3,63 @@ plugins {
 }
 
 group 'io.github.jennas'
-version '1.0-SNAPSHOT'
+version '0.0.1-SNAPSHOT'
+
+description 'simple swing app'
+
+apply plugin: 'java'
+apply plugin: 'java-library-distribution'
+apply plugin: 'application'
+
+//mainClassName = 'Main'
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
 
 repositories {
-    mavenCentral()
+//    mavenCentral()
+    maven {
+        url System.env.CODEARTIFACT_REPOSITORY_URL
+        credentials {
+            username "aws"
+            password System.env.CODEARTIFACT_AUTH_TOKEN
+        }
+    }
 }
 
 dependencies {
+    implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.272')
+    implementation 'com.amazonaws:aws-java-sdk-ec2:'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
 }
 
 test {
     useJUnitPlatform()
+}
+
+
+tasks.withType(Tar){
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.withType(Zip){
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+//distTar {
+//    duplicatesStrategy DuplicatesStrategy.INHERIT
+//}
+
+jar {
+//    duplicatesStrategy DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes 'Main-Class': 'io.github.jennas.Main'
+    }
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
 }
