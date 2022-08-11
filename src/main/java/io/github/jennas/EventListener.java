@@ -11,17 +11,20 @@ public class EventListener implements ActionListener {
     JTextField secretAccessKeyTextField;
     JComboBox<String> regionComboBox;
     JTable instanceTable;
+    JTextArea logTextArea;
 
     EventListener(
             JTextField accessKeyTextField,
             JTextField secretAccessKeyTextField,
             JComboBox<String> regionComboBox,
-            JTable instanceTable
+            JTable instanceTable,
+            JTextArea logTextArea
     ) {
         this.accessKeyTextField = accessKeyTextField;
         this.secretAccessKeyTextField = secretAccessKeyTextField;
         this.regionComboBox = regionComboBox;
         this.instanceTable = instanceTable;
+        this.logTextArea = logTextArea;
     }
 
     @Override
@@ -41,13 +44,19 @@ public class EventListener implements ActionListener {
     }
 
     private void getEC2Instance(String accessKey, String secretAccessKey, String region) {
-        GetEC2Instance ec2 = new GetEC2Instance(accessKey, secretAccessKey, region);
-        DefaultTableModel instanceTableModel = (DefaultTableModel) this.instanceTable.getModel();
+        try {
+            GetEC2Instance ec2 = new GetEC2Instance(accessKey, secretAccessKey, region);
+            DefaultTableModel instanceTableModel = (DefaultTableModel) this.instanceTable.getModel();
 
-        ArrayList<String[]> ec2List = ec2.getEC2List();
+            ArrayList<String[]> ec2List = ec2.getEC2List();
 
-        for (String[] ec2Items : ec2List) {
-            instanceTableModel.addRow(ec2Items);
+            for (String[] ec2Items : ec2List) {
+                instanceTableModel.addRow(ec2Items);
+            }
+        } catch (Exception e) {
+            this.logTextArea.setText(
+                    e.toString()
+            );
         }
     }
 }

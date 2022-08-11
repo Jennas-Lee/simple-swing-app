@@ -35,7 +35,7 @@ class Frame extends JFrame {
         setTitle("EC2 List");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Container cp = getContentPane();
-        cp.setLayout(new BorderLayout());
+        cp.setLayout(new GridLayout(1, 2));
 
         JPanel tablePanel = new JPanel();
         JPanel formPanel = new JPanel();
@@ -46,8 +46,8 @@ class Frame extends JFrame {
         formPanel.setLayout(new BorderLayout());
         formPanel.add(setForm());
 
-        cp.add(tablePanel, BorderLayout.WEST);
-        cp.add(formPanel, BorderLayout.EAST);
+        cp.add(tablePanel);
+        cp.add(formPanel);
 
         setSize(1000, 500);
         setLocationRelativeTo(null);
@@ -67,24 +67,39 @@ class Frame extends JFrame {
 
     private JPanel setForm() {
         JPanel formPanel = new JPanel();
-        JButton button = new JButton("OK");
+        JLabel accessKeyLabel = new JLabel("Access Key ");
+        JLabel secretAccessKeyLabel = new JLabel("Secret Access Key ");
+        JLabel regionLabel = new JLabel("Region ");
         JTextField accessKeyTextField = new JTextField(20);
         JTextField secretAccessKeyTextField = new JTextField(20);
         JComboBox<String> regionComboBox = new JComboBox<>(region);
+        JButton button = new JButton("OK");
+        JTextArea logTextArea = new JTextArea();
+        JScrollPane logScrollPane = new JScrollPane(logTextArea);
 
-        formPanel.setLayout(new GridLayout(4, 2));
+        logTextArea.setEnabled(false);
+        logTextArea.setForeground(Color.black);
 
-        formPanel.add(new JLabel("Access Key "));
+        formPanel.setLayout(null);
+
+        formPanel.add(accessKeyLabel);
         formPanel.add(accessKeyTextField);
-
-        formPanel.add(new JLabel("Secret Access Key "));
+        formPanel.add(secretAccessKeyLabel);
         formPanel.add(secretAccessKeyTextField);
-
-        formPanel.add(new JLabel("Region "));
+        formPanel.add(regionLabel);
         formPanel.add(regionComboBox);
-
-        button.addActionListener(new EventListener(accessKeyTextField, secretAccessKeyTextField, regionComboBox, instanceTable));
         formPanel.add(button);
+        formPanel.add(logScrollPane);
+        button.addActionListener(new EventListener(accessKeyTextField, secretAccessKeyTextField, regionComboBox, instanceTable, logTextArea));
+
+        accessKeyLabel.setBounds(30, 10, 120, 20);
+        accessKeyTextField.setBounds(150, 10, 300, 20);
+        secretAccessKeyLabel.setBounds(30, 40, 120, 20);
+        secretAccessKeyTextField.setBounds(150, 40, 300, 20);
+        regionLabel.setBounds(30, 70, 120, 20);
+        regionComboBox.setBounds(150, 70, 300, 20);
+        button.setBounds(30, 100, 420, 40);
+        logScrollPane.setBounds(30, 160, 420, 270);
 
         setSize(500, 300);
 
