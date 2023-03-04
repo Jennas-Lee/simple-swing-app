@@ -1,0 +1,23 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto11
+    commands:
+      - java --version
+  pre_build:
+    commands:
+      - export REPOSITORY_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain skills-training --domain-owner $REPOSITORY_ACCOUNT --query authorizationToken --output text`
+      - echo "REPOSITORY_URL $REPOSITORY_URL"
+      - echo "REPOSITORY_USERNAME $REPOSITORY_USERNAME"
+      - echo "REPOSITORY_AUTH_TOKEN $REPOSITORY_AUTH_TOKEN"
+  build:
+    commands:
+      - chmod +x ./gradlew
+      - ./gradlew clean
+      - ./gradlew build
+
+artifacts:
+  files:
+    - build/libs/*.jar

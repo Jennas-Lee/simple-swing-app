@@ -1,40 +1,64 @@
 package io.github.jennas;
 
+import com.amazonaws.services.identitymanagement.model.Policy;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.List;
 
 public class EventListener implements ActionListener {
     JTextField accessKeyTextField;
     JTextField secretAccessKeyTextField;
-    JComboBox<String> regionComboBox;
     JTable instanceTable;
     JTextArea logTextArea;
+    boolean eventType;
 
     EventListener(
             JTextField accessKeyTextField,
             JTextField secretAccessKeyTextField,
-            JComboBox<String> regionComboBox,
             JTable instanceTable,
-            JTextArea logTextArea
+            JTextArea logTextArea,
+            boolean eventType
     ) {
         this.accessKeyTextField = accessKeyTextField;
         this.secretAccessKeyTextField = secretAccessKeyTextField;
-        this.regionComboBox = regionComboBox;
         this.instanceTable = instanceTable;
         this.logTextArea = logTextArea;
+        this.eventType = eventType;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         String accessKey = this.accessKeyTextField.getText();
         String secretAccessKey = this.secretAccessKeyTextField.getText();
-        String region = this.regionComboBox.getItemAt(this.regionComboBox.getSelectedIndex());
+
+        if (this.eventType) {    // delete event
+            int result = JOptionPane.showConfirmDialog(
+                    null,
+                    "Do you want to delete IAM policies?",
+                    "Confirm",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (result == JOptionPane.YES_OPTION) { // delete
+                System.out.println("push YES");
+
+                ArrayList<String> policyArn = new ArrayList<>();
+
+                for (int i : this.instanceTable.getSelectedRows()) {
+                    policyArn.add(this.instanceTable.getModel().getValueAt(i, 1).toString());
+                }
+
+                IamPolicy iamPolicy = new IamPolicy(accessKey, secretAccessKey);
+                iamPolicy.deleteIamPolicyList(policyArn);
+            }
+        }
 
         removeAllTableRows();
-        getEC2Instance(accessKey, secretAccessKey, region);
+        getIamPolicy(accessKey, secretAccessKey);
     }
 
     private void removeAllTableRows() {
@@ -43,15 +67,15 @@ public class EventListener implements ActionListener {
         instanceTableModel.setRowCount(0);
     }
 
-    private void getEC2Instance(String accessKey, String secretAccessKey, String region) {
+    private void getIamPolicy(String accessKey, String secretAccessKey) {
         try {
-            GetEC2Instance ec2 = new GetEC2Instance(accessKey, secretAccessKey, region);
+            IamPolicy iamPolicy = new IamPolicy(accessKey, secretAccessKey);
             DefaultTableModel instanceTableModel = (DefaultTableModel) this.instanceTable.getModel();
 
-            ArrayList<String[]> ec2List = ec2.getEC2List();
+            List<Policy> policyList = iamPolicy.getIamPolicyList();
 
-            for (String[] ec2Items : ec2List) {
-                instanceTableModel.addRow(ec2Items);
+            for (Policy policy : policyList) {
+                instanceTableModel.addRow(new String[]{policy.getPolicyName(), policy.getArn()});
             }
         } catch (Exception e) {
             this.logTextArea.setText(

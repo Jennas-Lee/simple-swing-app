@@ -18,19 +18,20 @@ tasks.withType(JavaCompile) {
 }
 
 repositories {
-//    mavenCentral()
-    maven {
-        url System.env.REPOSITORY_URL
-        credentials {
-            username System.env.REPOSITORY_USERNAME
-            password System.env.REPOSITORY_AUTH_TOKEN
-        }
-    }
+    mavenCentral()
+//    maven {
+//        url System.env.REPOSITORY_URL
+//        credentials {
+//            username System.env.REPOSITORY_USERNAME
+//            password System.env.REPOSITORY_AUTH_TOKEN
+//        }
+//    }
 }
 
 dependencies {
     implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.272')
-    implementation 'com.amazonaws:aws-java-sdk-ec2:'
+//    implementation 'com.amazonaws:aws-java-sdk-ec2:'
+    implementation 'com.amazonaws:aws-java-sdk-iam:'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
 }

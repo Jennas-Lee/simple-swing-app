@@ -1,41 +1,27 @@
 package io.github.jennas;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
 class Frame extends JFrame {
-    private final String[] region = {
-            "us-east-1",
-            "us-east-2",
-            "us-west-1",
-            "us-west-2",
-            "af-south-1",
-            "ap-east-1",
-            "ap-south-1",
-            "ap-northeast-1",
-            "ap-northeast-2",
-            "ap-northeast-3",
-            "ap-southeast-1",
-            "ap-southeast-2",
-            "ap-southeast-3",
-            "ca-central-1",
-            "eu-central-1",
-            "eu-west-1",
-            "eu-west-2",
-            "eu-west-3",
-            "eu-north-1",
-            "eu-south-1",
-            "me-south-1",
-            "sa-east-1"
-    };
     JTable instanceTable;
 
     public Frame() {
-        setTitle("EC2 List");
+        setTitle("IAM Policy Nuke");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Container cp = getContentPane();
         cp.setLayout(new GridLayout(1, 2));
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        Image icon = toolkit.getImage("./icon.png");
+        setIconImage(icon);
 
         JPanel tablePanel = new JPanel();
         JPanel formPanel = new JPanel();
@@ -55,7 +41,7 @@ class Frame extends JFrame {
     }
 
     private JScrollPane setTable() {
-        String[] tableHeader = {"ID", "Name", "AZ", "Type", "Public IP", "Private IP"};
+        String[] tableHeader = {"Name", "ARN"};
         String[][] tableContents = new String[0][];
 
         DefaultTableModel instanceTableModel = new DefaultTableModel(tableContents, tableHeader);
@@ -69,11 +55,12 @@ class Frame extends JFrame {
         JPanel formPanel = new JPanel();
         JLabel accessKeyLabel = new JLabel("Access Key ");
         JLabel secretAccessKeyLabel = new JLabel("Secret Access Key ");
-        JLabel regionLabel = new JLabel("Region ");
+        JLabel getCredentialFileLabel = new JLabel("Get Credential File");
         JTextField accessKeyTextField = new JTextField(20);
         JTextField secretAccessKeyTextField = new JTextField(20);
-        JComboBox<String> regionComboBox = new JComboBox<>(region);
-        JButton button = new JButton("OK");
+        JButton getCredentialFileButton = new JButton("Get File");
+        JButton okButton = new JButton("OK");
+        JButton deleteButton = new JButton("DELETE");
         JTextArea logTextArea = new JTextArea();
         JScrollPane logScrollPane = new JScrollPane(logTextArea);
 
@@ -86,24 +73,79 @@ class Frame extends JFrame {
         formPanel.add(accessKeyTextField);
         formPanel.add(secretAccessKeyLabel);
         formPanel.add(secretAccessKeyTextField);
-        formPanel.add(regionLabel);
-        formPanel.add(regionComboBox);
-        formPanel.add(button);
+        formPanel.add(getCredentialFileLabel);
+        formPanel.add(getCredentialFileButton);
+        formPanel.add(okButton);
+        formPanel.add(deleteButton);
         formPanel.add(logScrollPane);
-        button.addActionListener(new EventListener(accessKeyTextField, secretAccessKeyTextField, regionComboBox, instanceTable, logTextArea));
+
+        getCredentialFileButton.addActionListener(
+                new GetFileEventListener(accessKeyTextField, secretAccessKeyTextField, logTextArea)
+        );
+        okButton.addActionListener(
+                new EventListener(accessKeyTextField, secretAccessKeyTextField, instanceTable, logTextArea, false)
+        );
+        deleteButton.addActionListener(
+                new EventListener(accessKeyTextField, secretAccessKeyTextField, instanceTable, logTextArea, true)
+        );
 
         accessKeyLabel.setBounds(30, 10, 120, 20);
         accessKeyTextField.setBounds(150, 10, 300, 20);
         secretAccessKeyLabel.setBounds(30, 40, 120, 20);
         secretAccessKeyTextField.setBounds(150, 40, 300, 20);
-        regionLabel.setBounds(30, 70, 120, 20);
-        regionComboBox.setBounds(150, 70, 300, 20);
-        button.setBounds(30, 100, 420, 40);
+        getCredentialFileLabel.setBounds(30, 70, 120, 20);
+        getCredentialFileButton.setBounds(150, 70, 300, 20);
+        okButton.setBounds(30, 100, 200, 40);
+        deleteButton.setBounds(250, 100, 200, 40);
         logScrollPane.setBounds(30, 160, 420, 270);
 
         setSize(500, 300);
 
         return formPanel;
+    }
+}
+
+class GetFileEventListener implements ActionListener {
+    JTextField accessKeyTextField;
+    JTextField secretAccessKeyTextField;
+    JTextArea logTextArea;
+
+    GetFileEventListener(
+            JTextField accessKeyTextField,
+            JTextField secretAccessKeyTextField,
+            JTextArea logTextArea
+    ) {
+        this.accessKeyTextField = accessKeyTextField;
+        this.secretAccessKeyTextField = secretAccessKeyTextField;
+        this.logTextArea = logTextArea;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        this.openFileChooser();
+    }
+
+    private void openFileChooser() {
+        JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+        int fileChooserResult = fileChooser.showOpenDialog(null);
+
+        if (fileChooserResult == 0) {    // chose file
+            try {
+                Path filePath = Paths.get(fileChooser.getSelectedFile().getPath());
+                List<String> allLines = Files.readAllLines(filePath);
+
+                String credentialLine = allLines.get(1);
+                String[] credential = credentialLine.split(",");
+
+                String accessKey = credential[2];
+                String secretAccessKey = credential[3];
+
+                this.accessKeyTextField.setText(accessKey);
+                this.secretAccessKeyTextField.setText(secretAccessKey);
+            } catch (Exception e) {
+                this.logTextArea.setText(e.toString());
+            }
+        }
     }
 }
 
